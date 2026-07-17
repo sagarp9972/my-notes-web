@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyNotes — Create Your Account</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="auth-shell">
+  <div class="auth-card wide">
+    <div class="brand"><div class="mark">📝</div><h1>MyNotes</h1></div>
+    <div class="auth-heading">
+      <h2>Create Your Account</h2>
+      <p>Join MyNotes and start organizing today.</p>
+    </div>
+
+    <div class="error-msg" id="errMsg"></div>
+
+    <form id="regForm">
+      <div class="avatar-picker">
+        <div class="avatar-circle" id="avatarPreview">👤</div>
+        <label class="btn btn-ghost btn-sm" for="avatarFile" style="cursor:pointer;">📷 Choose Profile Picture (optional)</label>
+        <input type="file" id="avatarFile" accept="image/*">
+      </div>
+
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" id="fullName" required placeholder="Your full name">
+      </div>
+
+      <div class="field">
+        <label>Email Address</label>
+        <input type="email" id="email" required placeholder="you@example.com">
+      </div>
+
+      <div class="field">
+        <label>Mobile Number</label>
+        <input type="tel" id="phone" required placeholder="10-digit mobile number">
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="password" required placeholder="Min. 6 characters">
+        </div>
+        <div class="field">
+          <label>Confirm Password</label>
+          <input type="password" id="confirmPassword" required placeholder="Re-enter password">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Date of Birth</label>
+        <input type="date" id="dob" required>
+      </div>
+
+      <div class="field">
+        <label>Gender</label>
+        <div class="gender-row">
+          <label><input type="radio" name="gender" value="Male" required> Male</label>
+          <label><input type="radio" name="gender" value="Female"> Female</label>
+          <label><input type="radio" name="gender" value="Other"> Other</label>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Register</button>
+    </form>
+
+    <p class="auth-foot">Already have an account? <a href="index.html">Login</a></p>
+  </div>
+</div>
+
+<script src="js/db.js"></script>
+<script>
+  let avatarData = null;
+  document.getElementById('avatarFile').addEventListener('change', function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    resizeImageFile(file, 320, function(dataUrl){
+      if(!dataUrl){
+        const err = document.getElementById('errMsg');
+        err.textContent = 'Could not read that image. Please try a different photo.';
+        err.style.display = 'block';
+        return;
+      }
+      avatarData = dataUrl;
+      document.getElementById('avatarPreview').innerHTML = `<img src="${avatarData}" alt="avatar">`;
+    });
+  });
+
+  document.getElementById('regForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const err = document.getElementById('errMsg');
+    err.style.display = 'none';
+
+    const name = document.getElementById('fullName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const dob = document.getElementById('dob').value;
+    const genderEl = document.querySelector('input[name=gender]:checked');
+
+    if(!/^\d{10}$/.test(phone)){
+      err.textContent = 'Please enter a valid 10-digit mobile number.';
+      err.style.display = 'block';
+      return;
+    }
+    if(password.length < 6){
+      err.textContent = 'Password must be at least 6 characters.';
+      err.style.display = 'block';
+      return;
+    }
+    if(password !== confirmPassword){
+      err.textContent = 'Passwords do not match.';
+      err.style.display = 'block';
+      return;
+    }
+    if(DB.findUserByEmail(email)){
+      err.textContent = 'An account with this email already exists.';
+      err.style.display = 'block';
+      return;
+    }
+    if(!genderEl){
+      err.textContent = 'Please select a gender.';
+      err.style.display = 'block';
+      return;
+    }
+
+    DB.createUser({ name, email, phone, password, dob, gender: genderEl.value, avatar: avatarData });
+    window.location.href = 'index.html?registered=1';
+  });
+</script>
+</body>
+</html>

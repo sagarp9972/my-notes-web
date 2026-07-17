@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyNotes — Dashboard</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="mark">📝</div><h1>MyNotes</h1></div>
+
+    <div class="nav-group">
+      <button class="nav-item active" data-view="view-dashboard"><span class="ic">🏠</span><span data-i18n="dashboard">Dashboard</span></button>
+      <button class="nav-item" data-view="view-today"><span class="ic">🕒</span><span data-i18n="todayWork">Today Work</span><span class="nav-badge hidden" id="todayBadge"></span></button>
+      <button class="nav-item" data-view="view-notes"><span class="ic">📝</span><span data-i18n="myNotes">My Notes</span></button>
+      <button class="nav-item" data-view="view-folders"><span class="ic">📁</span><span data-i18n="folders">Folders</span></button>
+      <button class="nav-item" data-view="view-favorites"><span class="ic">⭐</span><span data-i18n="favorites">Favorites</span></button>
+      <button class="nav-item" data-view="view-calendar"><span class="ic">📅</span><span data-i18n="calendar">Calendar</span></button>
+      <button class="nav-item" data-view="view-trash"><span class="ic">🗑</span><span data-i18n="trash">Trash</span></button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Account</div>
+      <button class="nav-item" data-view="view-profile"><span class="ic">👤</span><span data-i18n="profile">Profile</span></button>
+      <button class="nav-item" data-view="view-settings"><span class="ic">⚙</span><span data-i18n="settings">Settings</span></button>
+    </div>
+
+    <div class="sidebar-foot">
+      <button class="nav-item" id="logoutBtn"><span class="ic">🚪</span><span data-i18n="logout">Logout</span></button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="icon-btn menu-toggle" id="menuToggle">☰</button>
+        <h2 id="topbarTitle">Dashboard</h2>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="notifBtn" title="Notifications">🔔<span class="dot" id="notifDot"></span></button>
+        <button class="icon-btn" id="themeToggleBtn" title="Toggle theme">🌙</button>
+        <div class="avatar-mini" id="topAvatar">👤</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD VIEW -->
+      <section class="view active" id="view-dashboard">
+        <p class="welcome-line">👋 <span data-i18n="welcome">Welcome</span>, <b id="welcomeName">there</b></p>
+
+        <div class="stat-grid">
+          <div class="stat-card amber"><div class="label" data-i18n="totalNotes">Total Notes</div><div class="value mono" id="statTotal">0</div></div>
+          <div class="stat-card blue"><div class="label">Created Today</div><div class="value mono" id="statCreatedToday">0</div></div>
+          <div class="stat-card sage"><div class="label" data-i18n="todayWork">Today Work</div><div class="value mono" id="statTodayWork">0</div></div>
+          <div class="stat-card coral"><div class="label" data-i18n="favoriteNotes">Favorite Notes</div><div class="value mono" id="statFavorites">0</div></div>
+          <div class="stat-card"><div class="label" data-i18n="categories">Categories</div><div class="value mono" id="statCategories">0</div></div>
+        </div>
+
+        <div class="section-title"><h3 data-i18n="quickActions">Quick Actions</h3></div>
+        <div class="quick-actions">
+          <button class="qa-btn" id="qaCreateNote">➕ <span data-i18n="createNote">Create Note</span></button>
+          <button class="qa-btn" id="qaCreateFolder">📁 <span data-i18n="createFolder">Create Folder</span></button>
+          <button class="qa-btn" data-goto="view-favorites">⭐ <span data-i18n="viewFavorites">View Favorites</span></button>
+          <button class="qa-btn" data-goto="view-trash">🗑 <span data-i18n="trash">Trash</span></button>
+        </div>
+
+        <div class="section-title"><h3 data-i18n="recentNotes">Recent Notes</h3></div>
+        <div class="notes-grid" id="recentNotesGrid"></div>
+      </section>
+
+      <!-- TODAY WORK VIEW -->
+      <section class="view" id="view-today">
+        <p class="welcome-line">Tasks and reminders saved for <b id="todayDateLabel"></b>.</p>
+        <div class="day-panel" style="margin-top:0;">
+          <h4>Today's Work</h4>
+          <div id="todayList"></div>
+          <div class="day-add">
+            <select id="todayIconSelect" class="task-icon-select"></select>
+            <input type="text" id="todayInput" placeholder="Add something to do today...">
+            <button class="btn btn-primary btn-sm" id="todayAddBtn">Add</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- MY NOTES VIEW -->
+      <section class="view" id="view-notes">
+        <div class="search-bar">
+          <span>🔍</span>
+          <input type="text" id="searchNotes" placeholder="Search notes by title or content...">
+        </div>
+        <div class="notes-grid" id="allNotesGrid"></div>
+      </section>
+
+      <!-- FOLDERS LIST VIEW -->
+      <section class="view" id="view-folders">
+        <div class="section-title">
+          <h3>My Folders</h3>
+          <button class="btn btn-primary btn-sm" id="newFolderBtn">➕ New Folder</button>
+        </div>
+        <div class="folder-grid" id="folderGrid"></div>
+      </section>
+
+      <!-- FOLDER DETAIL VIEW -->
+      <section class="view" id="view-folder-detail">
+        <div class="crumb"><a href="#" data-goto="view-folders">📁 Folders</a> <span>/</span> <span id="folderDetailName"></span></div>
+        <div class="section-title">
+          <h3 id="folderDetailTitle"></h3>
+          <button class="btn btn-primary btn-sm" id="folderCreateNoteBtn">➕ Create Note</button>
+        </div>
+        <div class="notes-grid" id="folderNotesGrid"></div>
+      </section>
+
+      <!-- FAVORITES VIEW -->
+      <section class="view" id="view-favorites">
+        <div class="notes-grid" id="favoritesGrid"></div>
+      </section>
+
+      <!-- CALENDAR VIEW -->
+      <section class="view" id="view-calendar">
+        <div class="cal-head">
+          <div class="month-label" id="calMonthLabel"></div>
+          <div class="cal-nav">
+            <button class="btn btn-ghost btn-sm" id="calPrev">◀ Prev</button>
+            <button class="btn btn-ghost btn-sm" id="calToday">Today</button>
+            <button class="btn btn-ghost btn-sm" id="calNext">Next ▶</button>
+          </div>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="day-panel" id="dayPanel">
+          <h4 id="dayPanelTitle">Select a date</h4>
+          <div id="dayPanelList"></div>
+          <div class="day-add">
+            <select id="dayPanelIconSelect" class="task-icon-select"></select>
+            <input type="text" id="dayPanelInput" placeholder="Add a note for this day...">
+            <button class="btn btn-primary btn-sm" id="dayPanelAddBtn">Add</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TRASH VIEW -->
+      <section class="view" id="view-trash">
+        <div class="notes-grid" id="trashGrid"></div>
+      </section>
+
+      <!-- PROFILE VIEW -->
+      <section class="view" id="view-profile">
+        <div class="profile-grid">
+          <div class="profile-card">
+            <div class="avatar-circle" id="profileAvatar" style="cursor:pointer;" title="Click to change picture">👤</div>
+            <button type="button" class="btn btn-ghost btn-sm" id="changePictureBtn" style="margin-top:10px;">🖼 Change Picture</button>
+            <input type="file" id="profileAvatarFile" accept="image/*" class="hidden">
+            <h4 id="profileNameDisplay" style="margin-top:14px;"></h4>
+            <p class="sub" id="profileEmailDisplay"></p>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:20px;">
+            <div class="form-card">
+              <h4>Personal Details</h4>
+              <div class="row-2">
+                <div class="field"><label>Full Name</label><input type="text" id="pName"></div>
+                <div class="field"><label>Email</label><input type="email" id="pEmail" disabled></div>
+              </div>
+              <div class="row-2">
+                <div class="field"><label>Phone Number</label><input type="tel" id="pPhone"></div>
+                <div class="field"><label>Date of Birth</label><input type="date" id="pDob"></div>
+              </div>
+              <div class="field">
+                <label>Gender</label>
+                <div class="gender-row">
+                  <label><input type="radio" name="pGender" value="Male"> Male</label>
+                  <label><input type="radio" name="pGender" value="Female"> Female</label>
+                  <label><input type="radio" name="pGender" value="Other"> Other</label>
+                </div>
+              </div>
+              <button class="btn btn-primary" id="updateProfileBtn">Update Profile</button>
+            </div>
+
+            <div class="form-card">
+              <h4>Change Password</h4>
+              <div class="field"><label>Current Password</label><input type="password" id="curPass"></div>
+              <div class="row-2">
+                <div class="field"><label>New Password</label><input type="password" id="newPass"></div>
+                <div class="field"><label>Confirm New Password</label><input type="password" id="confPass"></div>
+              </div>
+              <button class="btn btn-sage" id="changePassBtn">Change Password</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS VIEW -->
+      <section class="view" id="view-settings">
+        <div class="settings-list">
+          <div class="settings-row">
+            <div><div class="s-label">🌙 Dark Mode</div><div class="s-sub">Switch between light and dark appearance</div></div>
+            <label class="switch"><input type="checkbox" id="darkModeToggle"><span class="slider-toggle"></span></label>
+          </div>
+          <div class="settings-row">
+            <div><div class="s-label">🔔 Notifications</div><div class="s-sub">Show a reminder badge for today's work</div></div>
+            <label class="switch"><input type="checkbox" id="notifToggle"><span class="slider-toggle"></span></label>
+          </div>
+          <div class="settings-row">
+            <div><div class="s-label">🌐 Language</div><div class="s-sub">Interface display language</div></div>
+            <select id="langSelect">
+              <option value="en">English</option>
+              <option value="kn">ಕನ್ನಡ (Kannada)</option>
+              <option value="hi">हिन्दी (Hindi)</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <div><div class="s-label">📥 Export Notes (PDF)</div><div class="s-sub">Opens a print-ready view of all your notes</div></div>
+            <button class="btn btn-ghost btn-sm" id="exportBtn">Export</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- CREATE / EDIT NOTE MODAL -->
+<div class="modal-overlay" id="noteModalOverlay">
+  <div class="modal">
+    <h3 id="noteModalTitle">Create Note</h3>
+    <div class="field"><label>Title</label><input type="text" id="noteTitle" placeholder="Note title"></div>
+    <div class="row-2">
+      <div class="field">
+        <label>Folder</label>
+        <select id="noteFolder"><option value="">No folder</option></select>
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <select id="noteCategory">
+          <option value="AI">🤖 AI</option>
+          <option value="Work">💼 Work</option>
+          <option value="Personal">🧘 Personal</option>
+          <option value="Study">📚 Study</option>
+          <option value="Ideas">💡 Ideas</option>
+          <option value="Projects">🗂 Projects</option>
+          <option value="College">🎓 College</option>
+          <option value="Office">🏢 Office</option>
+          <option value="Business">📈 Business</option>
+          <option value="Finance">💰 Finance</option>
+          <option value="Shopping">🛍 Shopping</option>
+          <option value="Travel">✈️ Travel</option>
+          <option value="Health">🩺 Health</option>
+          <option value="Fitness">🏋️ Fitness</option>
+          <option value="Meeting">🗓 Meeting</option>
+          <option value="Assignments">📄 Assignments</option>
+          <option value="Diary">📔 Diary</option>
+          <option value="Goals">🎯 Goals</option>
+          <option value="Wishlist">🎁 Wishlist</option>
+          <option value="Events">🎉 Events</option>
+          <option value="Birthday">🎂 Birthday</option>
+          <option value="Important">❗ Important</option>
+          <option value="Documents">📑 Documents</option>
+          <option value="Bills">🧾 Bills</option>
+          <option value="Passwords">🔑 Passwords</option>
+          <option value="Home">🏠 Home</option>
+          <option value="Family">👨‍👩‍👧 Family</option>
+          <option value="Friends">🧑‍🤝‍🧑 Friends</option>
+          <option value="Sports">🏅 Sports</option>
+          <option value="Technology">💻 Technology</option>
+          <option value="News">📰 News</option>
+          <option value="Learning">🧠 Learning</option>
+          <option value="Career">🚀 Career</option>
+          <option value="Interview">🎤 Interview</option>
+          <option value="Other">🗂 Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="field hidden" id="categoryDetailWrap">
+      <label id="categoryDetailLabel">Sport Name</label>
+      <input type="text" id="noteCategoryDetail" placeholder="e.g. Cricket, Football...">
+    </div>
+    <div class="field">
+      <label>Content</label>
+      <textarea id="noteContent" rows="6" placeholder="Write your notes here..."></textarea>
+    </div>
+    <label class="checkbox-row"><input type="checkbox" id="noteFavorite"> ⭐ Mark as Favorite</label>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="noteCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="noteSaveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE FOLDER MODAL -->
+<div class="modal-overlay" id="folderModalOverlay">
+  <div class="modal">
+    <h3>Create Folder</h3>
+    <div class="field"><label>Folder Name</label><input type="text" id="folderName" placeholder="e.g. Projects"></div>
+    <label>Color</label>
+    <div class="color-swatches" id="folderColorSwatches"></div>
+    <label style="display:block; margin-top:18px;">Folder Icon</label>
+    <div class="icon-swatches" id="folderIconSwatches"></div>
+    <div class="modal-actions" style="margin-top:20px;">
+      <button class="btn btn-ghost" id="folderCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="folderSaveBtn">Create Folder</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
