@@ -1,105 +1,85 @@
-# 📝 MyNotes — Native Android App (Kotlin)
+# 📝 MyNotes — Smart Notes Web App
 
-**Updated build** — includes a fix for a resource-linking error
-(`attribute ... not found` for Material/Navigation attributes like
-`endIconMode`, `strokeColor`, `navGraph`, `menu`, etc.) that some setups hit
-even after a full clean rebuild. Two changes were made to `app/build.gradle`
-and `gradle.properties`:
-1. A `resolutionStrategy { force ... }` block pins Material, AppCompat, and
-   Navigation to the exact versions the layouts need, so nothing else in the
-   dependency graph can silently pull in an older conflicting version.
-2. `android.nonTransitiveRClass` was set to `false` — this is a known fix for
-   attribute-resolution errors that cross library boundaries (e.g. Material's
-   attributes referenced inside a Navigation/AppCompat view).
+A fully working notes app: register/login/forgot password, a dashboard with
+live stats, notes with 35 categories, color/icon folders, favorites, a
+calendar with per-day tasks, trash, profile, and settings (dark mode,
+language, notifications, export). No server or install needed — it runs
+entirely in the browser using `localStorage` as its database.
 
-**If you've been troubleshooting this project already: delete your old
-project folder entirely and unzip this one fresh** rather than reusing the
-old folder — that avoids any leftover per-project cache/state contributing
-to the same error again.
+## How to run it
 
-This is a **fully native** rebuild of MyNotes — no WebView, no HTML/CSS/JS
-anywhere. Every screen is a real Android layout (Kotlin + XML), and all data
-is stored locally on the device using **Room** (SQLite), matching the
-Users / Folders / Notes / Day-Notes tables from the original design.
+1. Unzip the folder.
+2. Double-click **`index.html`** (or open it in Chrome/Edge/Firefox) —
+   or, for the smoothest experience, open the folder in VS Code and use the
+   **Live Server** extension (right-click `index.html` → "Open with Live
+   Server").
+3. Click **Register Here**, create an account, then log in.
 
-## How to open it
+That's it — no Node, no server, no build step.
 
-1. **Delete any previous `MyNotesNative` folder you were using.**
-2. Unzip `MyNotesNative.zip` to a fresh location.
-3. Open **Android Studio** → `File > Open...` → select the **`MyNotesNative`** folder (the one directly containing `build.gradle`, `settings.gradle`, and `app`).
-4. Let Gradle sync. If it asks to create/fix the Gradle wrapper, click OK — that's expected (see note below).
-5. Press **▶ Run** with an emulator or a connected phone.
-6. The app opens to the Login screen.
+> Note: because it uses the browser's local storage, your data stays on
+> that one browser/device only. Registering on a laptop and opening the site
+> on a phone will **not** show the same account — each browser keeps its
+> own separate data. There is currently no cross-device sync.
 
-> **Gradle wrapper note:** I couldn't include the wrapper's binary jar file
-> from this environment, so Android Studio will generate it automatically
-> the first time you open the project (it may prompt you once — that's normal).
+## Pages
 
-## What's inside
+| File | Purpose |
+|---|---|
+| `index.html` | Login |
+| `register.html` | Create account (name, email, mobile, password, DOB, gender, optional profile picture) |
+| `forgot-password.html` | Verify identity (name + email + phone) and reset password |
+| `dashboard.html` | The whole app: Dashboard, Today Work, My Notes, Folders, Favorites, Calendar, Trash, Profile, Settings |
 
-- **Kotlin + View Binding** throughout (no `findViewById`).
-- **Room** database (`AppDatabase.kt`) with 4 tables: `users`, `folders`, `notes`, `day_notes` — the same schema from the original design, just as real Android entities/DAOs instead of localStorage.
-- **Jetpack Navigation Component** with a single `MainActivity` hosting a `DrawerLayout` (the sidebar) + a nav graph swapping fragments for Dashboard, Today Work, My Notes, Folders, Favorites, Calendar, Trash, Profile, Settings.
-- **SharedPreferences**-based session (`SessionManager.kt`) for login state and per-user settings (dark mode, notifications, language).
-- Photos are resized and saved into the app's private storage (`filesDir/avatars/`) — never stored as huge unprocessed images.
-
-## Project layout
+## Structure
 
 ```
-MyNotesNative/
-├── app/src/main/java/com/mynotes/app/
-│   ├── data/                     Room: AppDatabase, entities, DAOs
-│   ├── session/SessionManager.kt Login session + per-user settings
-│   ├── util/                     Categories, colors/icons, date helpers, image resizing
-│   ├── auth/                     LoginActivity, RegisterActivity, ForgotPasswordActivity
-│   ├── MainActivity.kt            Drawer + toolbar + nav host
-│   └── ui/
-│       ├── dashboard/            Stats, quick actions, recent notes
-│       ├── today/                 Today Work (+ shared task adapter used by Calendar)
-│       ├── notes/                 My Notes, the note create/edit dialog, shared NoteAdapter
-│       ├── folders/                Folder list, folder detail, create-folder dialog
-│       ├── favorites/              Favorites list
-│       ├── calendar/                Month grid + day panel
-│       ├── trash/                    Trashed notes, restore/delete permanently
-│       ├── profile/                  Avatar, personal details, change password
-│       └── settings/                 Dark mode, notifications, language, export
-├── app/src/main/res/
-│   ├── layout/                    Every screen's XML layout
-│   ├── navigation/nav_graph.xml   Screen graph
-│   ├── menu/drawer_menu.xml       Sidebar items
-│   ├── mipmap-*/                  Your 📝 app icon at every density
-│   └── values / values-night/     Light + dark color palettes
-└── build.gradle, settings.gradle, gradle.properties
+mynotes/
+├── index.html              Login
+├── register.html            Register
+├── forgot-password.html     Forgot password
+├── dashboard.html           Main app shell (all views live here)
+├── css/
+│   └── style.css            Design system (dark/light theme, components)
+├── js/
+│   ├── db.js                Data layer (localStorage "database" + i18n dictionary + image resize helper)
+│   └── app.js                App logic (rendering, events, calendar, modals)
+└── README.md
 ```
 
-## Honest notes on scope (so nothing surprises you)
+## "Database" tables (as localStorage collections)
 
-A couple of things were simplified compared to the original web version, in
-the interest of shipping a working, buildable native project rather than an
-enormous one:
+Stored as JSON arrays under these keys:
 
-- **Export**: instead of a print-to-PDF trick (a browser-only feature),
-  Settings → Export shares all your notes as plain text through Android's
-  share sheet (Gmail, Drive, Notes apps, etc. can all receive it).
-- **Language switching**: the Settings screen lets you pick English / Kannada
-  / Hindi and it's saved per user, but the on-screen text throughout the app
-  is currently hardcoded in English rather than pulled from translated string
-  resources. Wiring up full translations would mean moving every label into
-  `strings.xml`/`values-kn/strings.xml`/`values-hi/strings.xml` — a
-  mechanical but sizeable task I've left as a clearly-flagged next step
-  rather than quietly pretending it's done.
-- **Import**: not included natively (the web version's JSON import doesn't
-  have a direct native equivalent); happy to add a "restore from exported
-  text/JSON" flow if you want it.
+- `mn_users` → id, name, email, phone, password, dob, gender, avatar, createdAt
+- `mn_folders` → id, userId, folder_name, color, folder_icon, createdAt
+- `mn_notes` → id, userId, folderId, title, content, category, categoryDetail, favorite, trashed, createdAt, updatedAt
+- `mn_daynotes` → id, userId, date, text, icon, completed, createdAt (powers "Today Work" + Calendar)
+- `mn_settings_<userId>` → darkMode, notifications, language
 
-## Changing the package name / app name
+## Features included
 
-- App name: `app/src/main/res/values/strings.xml` → `app_name`.
-- Package ID: `applicationId` and `namespace` in `app/build.gradle`, or use
-  Android Studio's `Refactor > Rename` on the `com.mynotes.app` package.
+- 🔐 Register / Login / Forgot Password (identity check + reset)
+- 🏠 Dashboard with live counters: total notes, created today, today's work, favorites, categories
+- 📝 Create / Edit / Delete notes (soft-delete → Trash), with 35 categories (AI, Work, Personal, Study, Ideas, Projects, College, Office, Business, Finance, Shopping, Travel, Health, Fitness, Meeting, Assignments, Diary, Goals, Wishlist, Events, Birthday, Important, Documents, Bills, Passwords, Home, Family, Friends, Sports, Technology, News, Learning, Career, Interview, Other) — each with an emoji shown right in the picker
+- 🔎 Extra detail field for **Sports** (sport name), **AI** (tool/topic), and **Other** (custom category name), shown on the note card
+- 📁 Folders — pick from 24 colors **and** 24 icons when creating one; open a folder to see just its notes
+- ⭐ Mark/unmark favorites
+- 🔍 Search notes by title or content
+- 📅 Calendar — click any date to add/view that day's tasks, each with its own chosen icon; a dot marks days with saved notes; "Mark Complete" keeps the task (strikethrough) rather than deleting it, and only "✕" removes it
+- 🕒 Today Work — same task list/icon/complete behavior, scoped to today; the notification bell only counts pending (not-yet-completed) tasks and clears once everything is done
+- 🗑 Trash — restore or permanently delete
+- 👤 Profile — picture (auto-resized on upload so it always saves and displays), name, email, phone, DOB, gender, change password
+- ⚙ Settings — dark mode, notifications toggle, language selector (English / Kannada / Hindi — saves the preference; full UI translation isn't wired up yet), export notes to a print-ready PDF view
+- 📱 Responsive layout with a collapsible sidebar on mobile
 
-## Building a shareable APK
+## Notes for a college submission
 
-`Build > Build App Bundle(s) / APK(s) > Build APK(s)`, then find it under
-`app/build/outputs/apk/debug/app-debug.apk` to install on another phone
-directly (enable "install unknown apps" there first).
+- Passwords are stored in plain text in `localStorage` for demo simplicity —
+  for a real deployment you'd hash passwords server-side and use a real
+  database (the table design above maps directly to SQL tables if you want
+  to swap in MySQL/PostgreSQL + a backend later).
+- All data is scoped per browser/device. To demo multiple users, register
+  several accounts in the same browser — each user only ever sees their own
+  notes. There's no built-in way to share one account across a laptop and a
+  phone, since everything is stored locally rather than on a server.
